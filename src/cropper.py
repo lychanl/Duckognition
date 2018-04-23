@@ -39,6 +39,7 @@ def iter_images(root_dir_path: str) -> (str, np.array, str):
 def save_image(orig_path: str, path: str, image: np.array):
     im = Image.fromarray(image, 'RGB')
     im.thumbnail([IMSIZE, IMSIZE], Image.ANTIALIAS)
+    im = resizeimage.resize_crop(im, [IMSIZE, IMSIZE])
     #im = resizeimage.resize_contain(im, [IMSIZE, IMSIZE])
     # imageio.imwrite(path, image)
     im.save(path, im.format)
