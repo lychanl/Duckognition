@@ -2,6 +2,7 @@ import math
 import os
 import sys
 import tensorflow as tf
+import numpy as np
 
 slim = tf.contrib.slim
 
@@ -31,13 +32,11 @@ def bytes_feature(values):
     return tf.train.Feature(bytes_list=tf.train.BytesList(value=[values]))
 
 
-def image_to_tfexample(image_data, image_format, height, width, class_id):
+def image_to_tfexample(image_data, class_id):
+    assert(image_data.dtype == np.uint8)
     return tf.train.Example(features=tf.train.Features(feature={
-        'image/encoded': bytes_feature(image_data),
-        'image/format': bytes_feature(image_format),
-        'image/class/label': int64_feature(class_id),
-        'image/height': int64_feature(height),
-        'image/width': int64_feature(width),
+        'image/data': bytes_feature(image_data.tobytes()),
+        'image/class': int64_feature(class_id),
     }))
 
 def write_label_file(labels_to_class_names, dataset_dir,
@@ -182,12 +181,11 @@ def _convert_dataset(split_name, filenames, class_names_to_ids, dataset_dir, tfr
                         # Read the filename:
                         image_data = tf.gfile.FastGFile(filenames[i], 'rb').read()
                         height, width = image_reader.read_image_dims(sess, image_data)
-
+                        decoded = image_reader.decode_jpeg(sess, image_data)
                         class_name = os.path.basename(os.path.dirname(filenames[i]))
                         class_id = class_names_to_ids[class_name]
 
-                        example = image_to_tfexample(
-                            image_data, b'jpg', height, width, class_id)
+                        example = image_to_tfexample(decoded, class_id)
                         tfrecord_writer.write(example.SerializeToString())
 
     sys.stdout.write('\n')
