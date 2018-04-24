@@ -5,7 +5,7 @@ import sys
 # usage: python main.py lr mom act epoch
 # 0.0 < lr < 1.0
 # 0.0 < mom < 1.0
-# act - string from {relu, relu6, crelu, elu, selu, softplus, softsign, dropout, bias_add, sigmoid, tanh}
+# act - string from {relu, relu6, crelu, elu, selu, softplus, softsign, dropout, bias_add, sigmoid, tanh, leaky_relu}
 # epoch > 0 integer
 
 learning_rate = 0.002
@@ -30,6 +30,8 @@ if len(sys.argv) > 3:
         activation = tf.nn.elu
     elif sys.argv[3] == "selu":
         activation = tf.nn.selu
+    elif sys.argv[3] == "leaky_relu":
+        activation = tf.nn.leaky_relu
     elif sys.argv[3] == "softplus":
         activation = tf.nn.softplus
     elif sys.argv[3] == "softsign":
