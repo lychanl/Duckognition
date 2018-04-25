@@ -15,16 +15,16 @@ class Perceptron:
     def __init__(self, learning_rate, momentum, activation):
         self._X = tf.placeholder(tf.float32, [None, self.NEURONS[0]])
         self._Y = tf.placeholder(tf.float32, [None, self.CLASSES])
-        self._train_data = tf.data.TFRecordDataset(['data_train.tfrecord']).map(lambda x: x)
+        self._train_data = tf.data.TFRecordDataset(['data_train.tfrecord'])
         self._val_data = tf.data.TFRecordDataset(['data_validate.tfrecord'])
 
         train_it = self._train_data.make_initializable_iterator()
         eval_it = self._val_data.make_initializable_iterator()
 
-        self._train_it_next = eval_it.get_next()
+        self._train_it_next = tf.parse_single_example(eval_it.get_next(), self._feature)
         self._train_it_initializer = eval_it.initializer
 
-        self._eval_it_next = train_it.get_next()
+        self._eval_it_next = tf.parse_single_example(train_it.get_next(), self._feature)
         self._eval_it_initializer = train_it.initializer
 
         self._nn = self._create_nn(activation)
@@ -43,11 +43,11 @@ class Perceptron:
         return out
 
     def _run_example(self, sess: tf.Session, func: tf.Tensor, example: tf.Tensor):
-        parsed = tf.parse_single_example(example, self._feature)
+        parsed = sess.run(example)
 
-        input_str = sess.run(parsed['image/data']).values
+        input_str = parsed['image/data'].values
         input = sess.run(self._input_decoder, {self._input_to_decode: input_str})
-        output = sess.run(parsed['image/class'])
+        output = parsed['image/class']
         output_arr = [[0 for i in range(51) if i != output]]
 
         return sess.run(func, {self._X: input, self._Y: output_arr})
