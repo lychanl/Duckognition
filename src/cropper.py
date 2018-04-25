@@ -4,6 +4,7 @@ import glob
 import os
 import sys
 import logging
+from LogGabor import LogGabor, imread as lg_imread
 from PIL import Image
 from resizeimage import resizeimage
 
@@ -20,7 +21,7 @@ def read_boxes(file_path: str) -> (str, (int, int), (int, int)):
         for line in file.readlines():
             raw = line.split(" ")
             name = raw[0].replace("-", "")
-            origin = tuple(int(p) for p in  raw[1:3])
+            origin = tuple(int(p) for p in raw[1:3])
             offset = tuple(int(p) for p in raw[3:5])
             yield (name, origin, offset)
 
@@ -31,18 +32,17 @@ def iter_images(root_dir_path: str) -> (str, np.array, str):
     (name_of_the_image, loaded_image_as_np_array, path_to_the_image)
     """
     for i, path in enumerate(glob.iglob(f"{root_dir_path}/**/*.jpg")):
-        name = path.split("\\")[-1][:-4]
+        name = path.split("/")[-1][:-4]
         img = imageio.imread(path)
         yield name, img, path
     return i
 
 def save_image(orig_path: str, path: str, image: np.array):
-    im = Image.fromarray(image, 'RGB')
-    im.thumbnail([IMSIZE, IMSIZE], Image.ANTIALIAS)
-    im = resizeimage.resize_crop(im, [IMSIZE, IMSIZE])
-    #im = resizeimage.resize_contain(im, [IMSIZE, IMSIZE])
-    # imageio.imwrite(path, image)
-    im.save(path, im.format)
+    #im = Image.fromarray(image, 'RGB')
+    #im.thumbnail([IMSIZE, IMSIZE], Image.ANTIALIAS)
+    #im = resizeimage.resize_crop(im, [IMSIZE, IMSIZE])
+    imageio.imwrite(path, image)
+    #im.save(path, im.format)
 
 def convert_path(original_path: str, new_path: str) -> str:
     """
@@ -53,7 +53,7 @@ def convert_path(original_path: str, new_path: str) -> str:
 
     result data/images/2089/img.jpg
     """
-    path = original_path.split("\\")
+    path = original_path.split("/")
     path[0] = new_path
     __LOGGER__.debug(f"original: {original_path} new_path: {new_path} result {path}")
     return '/'.join(path)
@@ -61,6 +61,15 @@ def convert_path(original_path: str, new_path: str) -> str:
 def crop_image(image, origin, offset) -> np.array:
     new_image = image[origin[1]:origin[1]+offset[1], origin[0]:origin[0]+offset[0]]
     return new_image
+
+
+def apply_gabor(image) -> np.array:
+    lg = LogGabor("parameters.py")
+    lg.set_size(image)
+    image[:, :, 0] = image[:, :, 0]*lg.mask
+    image[:, :, 1] = image[:, :, 1]*lg.mask
+    image[:, :, 2] = image[:, :, 2]*lg.mask
+    return image
 
 """
 Dict of image name and corresponding bounding box
@@ -75,6 +84,7 @@ def crop_ducks(data_set_path: str, save_path: str):
     for name, image, path in iter_images(data_set_path):
         __LOGGER__.debug(f"new image {name}, {path}")
         cropped = crop_image(image, *BOUNDING_BOXES[name])
+        cropped = apply_gabor(cropped)
         result_path = convert_path(path, save_path)
         os.makedirs("/".join(result_path.split("/")[:-1]), exist_ok=True)
         try:
