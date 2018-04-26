@@ -48,9 +48,12 @@ class Perceptron:
         input = sess.run(self._input_decoder, {self._input_to_decode: input_str})
         input = [[input[0][i] for i in range(len(input[0])) if i % 3 == 0]]
         output = parsed['image/class']
-        output_arr = [[0 for i in range(51) if i != output]]
+        output_arr = [[0 if i != output else 1 for i in range(50)]]
 
-        return sess.run(func, {self._X: input, self._Y: output_arr})
+        ret, res, desired = sess.run((func, self._nn, self._Y), {self._X: input, self._Y: output_arr})
+#        print(res)
+#        print(desired)
+        return ret
 
     def _run_train(self, sess: tf.Session):
         sess.run(self._train_it_initializer)
