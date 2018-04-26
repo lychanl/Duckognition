@@ -49,6 +49,7 @@ if len(sys.argv) > 4 and int(sys.argv[4]) > 0:
     epochs = int(sys.argv[4])
 
 
+tf.set_random_seed(0)
 with tf.Session() as sess:
     print("Creating perceptron, learning rate=%f, momentum=%f, activation=%s. %d epochs." % (learning_rate, momentum,
           str(activation), epochs))
