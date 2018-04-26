@@ -8,7 +8,7 @@ import os
 from sys import argv
 import shutil
 
-IMSIZE = 5
+IMSIZE = 7
 
 
 def iter_images(root_dir_path: str) -> (str, Image, str):
