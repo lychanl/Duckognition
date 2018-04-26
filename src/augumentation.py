@@ -47,8 +47,8 @@ def transpose_ducks(root_dir: str, save_dir: str):
         save_image(convert_path(path, save_dir), image)
         for suffix, t_img in zip(_IMAGES_NAMES_SUFFIXES, transposes):
             save_path = convert_path(path, save_dir)
-            save_path = "/".join(save_path.split("/")[:-1])
-            save_path += f"/{inject_in_name(name, suffix)}.jpg"
+            save_path = "\\".join(save_path.split("\\")[:-1])
+            save_path += f"\\{inject_in_name(name, suffix)}.jpg"
             save_image(save_path, t_img)
 
 
