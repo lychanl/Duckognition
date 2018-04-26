@@ -52,7 +52,7 @@ if len(sys.argv) > 4 and int(sys.argv[4]) > 0:
 with tf.Session() as sess:
     print("Creating perceptron, learning rate=%f, momentum=%f, activation=%s. %d epochs." % (learning_rate, momentum,
           str(activation), epochs))
-    perceptron = p.Perceptron(learning_rate=learning_rate, momentum=momentum, activation=activation)
+    perceptron = p.Perceptron(learning_rate=learning_rate, momentum=momentum, activation=tf.nn)
 
     sess.run(tf.global_variables_initializer())
 

@@ -35,7 +35,7 @@ def iter_images(root_dir_path: str) -> (str, np.array, str):
         name = path.split("/")[-1][:-4]
         img = imageio.imread(path)
         yield name, img, path
-    return i
+        return i
 
 def save_image(orig_path: str, path: str, image: np.array):
     #im = Image.fromarray(image, 'RGB')

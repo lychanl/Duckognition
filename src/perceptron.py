@@ -5,7 +5,7 @@ class Perceptron:
 
     INPUTS = 25 * 25 * 3
     CLASSES = 50
-    NEURONS = (INPUTS, 100, 75, CLASSES)
+    NEURONS = (INPUTS, 50, CLASSES)
 
     _feature = {
         'image/data': tf.VarLenFeature(tf.string),
@@ -37,12 +37,11 @@ class Perceptron:
         self._input_decoder = tf.cast(tf.decode_raw(self._input_to_decode, tf.uint8), tf.float32)
 
     def _create_nn(self, activation):
-        l1 = tf.layers.dense(self._X, self.NEURONS[1], activation=activation)
-        l2 = tf.layers.dense(l1, self.NEURONS[2], activation=activation)
-        out = tf.layers.dense(l2, self.NEURONS[3], activation=tf.nn.softmax)
+        hidden = tf.layers.dense(self._X, self.NEURONS[1], activation=activation)
+        out = tf.layers.dense(hidden, self.CLASSES, activation=tf.nn.softmax)
         return out
 
-    def _run_example(self, sess: tf.Session, func: tf.Tensor, example: tf.Tensor):
+    def _run_example(self, sess: tf.Session, func, example: tf.Tensor):
         parsed = sess.run(example)
 
         input_str = parsed['image/data'].values
@@ -56,12 +55,16 @@ class Perceptron:
         sess.run(self._train_it_initializer)
 
         run = 0
+        total_loss = 0.
         try:
             while True:
                 run += 1
-                self._run_example(sess, self._train_op, self._train_it_next)
+                loss, _ = self._run_example(sess, (self._loss_function, self._train_op), self._train_it_next)
+                total_loss += loss
         except tf.errors.OutOfRangeError:
             pass
+
+        print("train average loss: " + str(total_loss / run))
 
     def _run_eval(self, sess: tf.Session):
         sess.run(self._eval_it_initializer)
