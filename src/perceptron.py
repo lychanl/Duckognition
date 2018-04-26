@@ -3,7 +3,7 @@ import tensorflow as tf
 
 class Perceptron:
 
-    INPUTS = 5 * 5 * 48
+    INPUTS = 7 * 7 * 48
     CLASSES = 50
     NEURONS = (INPUTS, 50, CLASSES)
 
