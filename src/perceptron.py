@@ -3,7 +3,7 @@ import tensorflow as tf
 
 class Perceptron:
 
-    INPUTS = 25 * 25 * 3
+    INPUTS = 5 * 5 * 48
     CLASSES = 50
     NEURONS = (INPUTS, 50, CLASSES)
 
@@ -46,6 +46,7 @@ class Perceptron:
 
         input_str = parsed['image/data'].values
         input = sess.run(self._input_decoder, {self._input_to_decode: input_str})
+        input = [[input[0][i] for i in range(len(input[0])) if i % 3 == 0]]
         output = parsed['image/class']
         output_arr = [[0 for i in range(51) if i != output]]
 
