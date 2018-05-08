@@ -3,9 +3,9 @@ import tensorflow as tf
 
 class Perceptron:
 
-    INPUTS = 7 * 7 * 48
+    INPUTS = 20*20*12;
     CLASSES = 50
-    NEURONS = (INPUTS, 50, CLASSES)
+    NEURONS = (INPUTS, 150, 100, CLASSES)
 
     _feature = {
         'image/data': tf.VarLenFeature(tf.string),
@@ -38,7 +38,8 @@ class Perceptron:
 
     def _create_nn(self, activation):
         hidden = tf.layers.dense(self._X, self.NEURONS[1], activation=activation)
-        out = tf.layers.dense(hidden, self.CLASSES, activation=tf.nn.softmax)
+        hidden2 = tf.layers.dense(hidden, self.NEURONS[2], activation=activation)
+        out = tf.layers.dense(hidden2, self.CLASSES, activation=tf.nn.softmax)
         return out
 
     def _run_example(self, sess: tf.Session, func, example: tf.Tensor):
