@@ -12,6 +12,7 @@ learning_rate = 0.002
 momentum = 0.99
 activation = tf.nn.sigmoid
 epochs = 10
+filtered = True
 
 if len(sys.argv) > 1 and 0.0 < float(sys.argv[1]) < 1.0:
     learning_rate = float(sys.argv[1])
@@ -48,12 +49,14 @@ if len(sys.argv) > 3:
 if len(sys.argv) > 4 and int(sys.argv[4]) > 0:
     epochs = int(sys.argv[4])
 
+if len(sys.argv) > 5 and sys.argv[5] == "unfiltered":
+    filtered = False
 
 tf.set_random_seed(0)
 with tf.Session() as sess:
-    print("Creating perceptron, learning rate=%f, momentum=%f, activation=%s. %d epochs." % (learning_rate, momentum,
-          str(activation), epochs))
-    perceptron = p.Perceptron(learning_rate=learning_rate, momentum=momentum, activation=activation)
+    print("Creating perceptron, learning rate=%f, momentum=%f, activation=%s. %d epochs, filtered=%r." % (learning_rate, momentum,
+          str(activation), epochs, filtered))
+    perceptron = p.Perceptron(learning_rate=learning_rate, momentum=momentum, activation=activation, filtered=filtered)
 
     sess.run(tf.global_variables_initializer())
 
