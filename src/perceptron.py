@@ -1,22 +1,29 @@
 import tensorflow as tf
+import operator
 
 
 class Perceptron:
 
-    INPUTS = 20*20*12;
+    INPUTS_FILTERED = 20*20*12
+    INPUTS_UNFILTERED = 20*20*3
     CLASSES = 50
-    NEURONS = (INPUTS, 150, 100, CLASSES)
+    HIDDEN_NEURONS = (150, 100)
 
     _feature = {
         'image/data': tf.VarLenFeature(tf.string),
         'image/class': tf.FixedLenFeature([], tf.int64),
     }
 
-    def __init__(self, learning_rate, momentum, activation):
-        self._X = tf.placeholder(tf.float32, [None, self.NEURONS[0]])
+    def __init__(self, learning_rate, momentum, activation, filtered):
+        self._filtered = filtered
+        self._inputs = self.INPUTS_FILTERED if filtered else self.INPUTS_UNFILTERED
+
+        self._X = tf.placeholder(tf.float32, [None, self._inputs])
         self._Y = tf.placeholder(tf.float32, [None, self.CLASSES])
-        self._train_data = tf.data.TFRecordDataset(['data_train.tfrecord'])
-        self._val_data = tf.data.TFRecordDataset(['data_validate.tfrecord'])
+        self._train_data = tf.data.TFRecordDataset(['data_train.tfrecord' if filtered
+                                                    else 'data_train_unf.tfrecord'])
+        self._val_data = tf.data.TFRecordDataset(['data_validate.tfrecord' if filtered
+                                                  else 'data_validate_unf.tfrecord'])
 
         train_it = self._train_data.make_initializable_iterator()
         eval_it = self._val_data.make_initializable_iterator()
@@ -37,8 +44,8 @@ class Perceptron:
         self._input_decoder = tf.cast(tf.decode_raw(self._input_to_decode, tf.uint8), tf.float32)
 
     def _create_nn(self, activation):
-        hidden = tf.layers.dense(self._X, self.NEURONS[1], activation=activation)
-        hidden2 = tf.layers.dense(hidden, self.NEURONS[2], activation=activation)
+        hidden = tf.layers.dense(self._X, self.HIDDEN_NEURONS[0], activation=activation)
+        hidden2 = tf.layers.dense(hidden, self.HIDDEN_NEURONS[1], activation=activation)
         out = tf.layers.dense(hidden2, self.CLASSES, activation=tf.nn.softmax)
         return out
 
@@ -47,44 +54,56 @@ class Perceptron:
 
         input_str = parsed['image/data'].values
         input = sess.run(self._input_decoder, {self._input_to_decode: input_str})
-        input = [[input[0][i] for i in range(len(input[0])) if i % 3 == 0]]
+        input = [[input[0][i] for i in range(len(input[0])) if (i % 3 == 0 or not self._filtered)]]
         output = parsed['image/class']
         output_arr = [[0 if i != output else 1 for i in range(50)]]
 
         ret, res, desired = sess.run((func, self._nn, self._Y), {self._X: input, self._Y: output_arr})
+
+        desired_el, _ = max(enumerate(desired[0]), key=operator.itemgetter(1))
+        res_el, _ = max(enumerate(res[0]), key=operator.itemgetter(1))
 #        print(res)
 #        print(desired)
-        return ret
+
+        return ret, desired_el == res_el
 
     def _run_train(self, sess: tf.Session):
         sess.run(self._train_it_initializer)
 
         run = 0
         total_loss = 0.
+        correct_n = 0
         try:
             while True:
                 run += 1
-                loss, _ = self._run_example(sess, (self._loss_function, self._train_op), self._train_it_next)
+                (loss, _), correct = self._run_example(sess, (self._loss_function, self._train_op), self._train_it_next)
                 total_loss += loss
+
+                if correct:
+                    correct_n += 1
         except tf.errors.OutOfRangeError:
             pass
 
-        print("train average loss: " + str(total_loss / run))
+        print("train average loss: " + str(total_loss / run) + " correct predictions: " + str(correct_n / run))
 
     def _run_eval(self, sess: tf.Session):
         sess.run(self._eval_it_initializer)
 
         total_loss = 0.
         run = 0
+        correct_n = 0
         try:
             while True:
                 run += 1
-                loss = self._run_example(sess, self._loss_function, self._eval_it_next)
+                loss, correct = self._run_example(sess, self._loss_function, self._eval_it_next)
                 total_loss += loss
+
+                if correct:
+                    correct_n += 1
         except tf.errors.OutOfRangeError:
             pass
 
-        print("average: " + str(total_loss/run))
+        print("eval average: " + str(total_loss/run) + " correct predictions: " + str(correct_n / run))
 
     def eval(self, sess: tf.Session):
         self._run_eval(sess)
