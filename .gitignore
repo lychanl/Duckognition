@@ -1,0 +1,9 @@
+/.idea
+/SET_A
+/SET_A_filtered
+/*.iml
+out*.txt
+*.tfrecord
+__pychache__
+*.bat
+/src/__pycache__
