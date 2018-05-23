@@ -2,10 +2,10 @@ import tensorflow as tf
 from src.NN import NN
 
 class LeNet(NN):
-    TFRECORD_SUFFIX = '_unf_proc'
+    TFRECORD_SUFFIX = '_50x50_proc'
 
-    INPUT_WIDTH = 20
-    INPUT_HEIGHT = 20
+    INPUT_WIDTH = 50
+    INPUT_HEIGHT = 50
 
     FILTERS1_N = 8
     FILTERS1_SIZE = 4

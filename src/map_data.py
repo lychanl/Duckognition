@@ -69,5 +69,5 @@ def run_file(sess, input_name, output_name):
 
 
 with tf.Session() as sess:
-    run_file(sess, "data_train_unf.tfrecord", "data_train_unf_proc.tfrecord")
-    run_file(sess, "data_validate_unf.tfrecord", "data_validate_unf_proc.tfrecord")
+    run_file(sess, "data_train_50x50.tfrecord", "data_train_50x50_proc.tfrecord")
+    run_file(sess, "data_validate_50x50.tfrecord", "data_validate_50x50_proc.tfrecord")
