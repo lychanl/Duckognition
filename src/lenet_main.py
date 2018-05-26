@@ -2,9 +2,9 @@ import sys
 from src.lenet import LeNet
 import tensorflow as tf
 
-learning_rate = 0.002
+learning_rate = 0.001
 momentum = 0.99
-epochs = 10
+epochs = 250
 filtered = True
 
 if len(sys.argv) > 1 and 0.0 < float(sys.argv[1]) < 1.0:
