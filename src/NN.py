@@ -11,7 +11,7 @@ class NN:
         'image/class': tf.FixedLenFeature([50], tf.int64),
     }
 
-    def __init__(self, learning_rate, momentum, tfrecord_suffix, width, height, channels):
+    def __init__(self, learning_rate, momentum, tfrecord_suffix, width, height, channels, cross_entropy=None):
 
         self.X = tf.placeholder(tf.string)
         self.Y = tf.placeholder(tf.float32, [None, self.CLASSES])
@@ -31,7 +31,9 @@ class NN:
 
         self._nn = self._create_nn()
 
-        self._loss_function = tf.reduce_sum(tf.squared_difference(self._nn, self.Y), 1)
+        self._loss_function = cross_entropy(self._nn, self.Y) if cross_entropy is not None \
+            else tf.reduce_sum(tf.squared_difference(self._nn, self.Y), 1)
+
         optimizer = tf.train.AdamOptimizer()  # (learning_rate=learning_rate, momentum=momentum, use_nesterov=True)
         self._train_op = optimizer.minimize(self._loss_function)
 
@@ -103,7 +105,7 @@ class NN:
         self._run_eval(sess)
 
     def train(self, sess: tf.Session, epochs, print_and_eval=True):
-        for i in range(epochs):
+        for i in range(int(epochs)):
             self._run_train(sess)
 
             if print_and_eval:
