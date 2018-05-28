@@ -6,7 +6,7 @@ epochs = 5000
 filtered = True
 
 use_softmax = True
-use_cross_entropy = True
+use_cross_entropy = False
 activation = tf.nn.sigmoid
 layers_n = 9
 descr_size = 32
