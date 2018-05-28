@@ -32,9 +32,11 @@ if len(sys.argv) > 2:
     elif sys.argv[2] == "decr_descr":
         descr_size = 32
     elif sys.argv[2] == "sigmoid_cross_entropy":
-        layers_n = 10
+        use_cross_entropy = True
+        use_softmax = False
     elif sys.argv[2] == "softmax_cross_entropy":
-        layers_n = 10
+        use_cross_entropy = True
+        use_softmax = True
     else:
         raise Exception("Invalid experiment name!")
 
