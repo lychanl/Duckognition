@@ -46,9 +46,9 @@ name += ".ckpt"
 tf.set_random_seed(0)
 
 
-with tf.device('/cpu:0'), tf.Session(config=tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True))) as sess:
+with tf.Session(config=tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True))) as sess:
     print("Creating Conv, experiment: %s, %d epochs" % (experiment, epochs))
-    conv = Conv()
+    conv = Conv(layers_n, descr_size, activation, use_softmax, use_cross_entropy)
 
     sess.run(tf.global_variables_initializer())
 

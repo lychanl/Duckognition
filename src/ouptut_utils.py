@@ -17,24 +17,28 @@ for line in fileinput.input():
     tokens = line.split()
     tokens = [e for token in tokens for e in token.split('=')]
     if len(tokens) != 0:
-        if line_n == 0:  # Creating perceptron... line
-            learning_rate = tokens[4][:-1]
-            momentum = tokens[6][:-1]
-            activation = tokens[9]
+        try:
+            if line_n == 0:  # Creating perceptron... line
+                pass
+    #            learning_rate = tokens[4][:-1]
+    #            momentum = tokens[6][:-1]
+    #            activation = tokens[9]
 
-        elif line_n % 3 == 2:  # Average
-            eval_averages.append(tokens[2])
-            eval_correct.append(tokens[5])
+            elif line_n % 3 == 2:  # Average
+                eval_averages.append(tokens[2])
+                eval_correct.append(tokens[5])
 
-        elif line_n % 3 == 0:  # Train average loss
-            train_averages.append(tokens[3])
-            train_correct.append(tokens[6])
+            elif line_n % 3 == 0:  # Train average loss
+                train_averages.append(tokens[3])
+                train_correct.append(tokens[6])
+        except:
+            print("")
 
     line_n += 1
 
-print('Learning rate:\t' + learning_rate)
-print('Momentum:\t' + momentum)
-print('Activation:\t' + activation)
+# print('Learning rate:\t' + learning_rate)
+# print('Momentum:\t' + momentum)
+# print('Activation:\t' + activation)
 
 print('Epoch\tAverage-eval\tCorrect-eval\tAverage-train\tCorrect-train')
 

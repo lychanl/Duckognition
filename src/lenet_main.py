@@ -17,7 +17,7 @@ if len(sys.argv) > 3:
     epochs = float(sys.argv[3])
 
 tf.set_random_seed(0)
-with tf.device('/cpu:0'), tf.Session(config=tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True))) as sess:
+with tf.Session(config=tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True))) as sess:
     print("Creating LeNet, learning rate=%f, momentum=%f, %d epochs" % (learning_rate, momentum, epochs))
     lenet = LeNet(learning_rate=learning_rate, momentum=momentum)
 

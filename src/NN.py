@@ -11,7 +11,7 @@ class NN:
         'image/class': tf.FixedLenFeature([50], tf.int64),
     }
 
-    def __init__(self, learning_rate, momentum, tfrecord_suffix, width, height, channels, cross_entropy=None):
+    def __init__(self, learning_rate, momentum, tfrecord_suffix, width, height, channels, cross_entropy=None, train_batch_size=5000):
 
         self.X = tf.placeholder(tf.string)
         self.Y = tf.placeholder(tf.float32, [None, self.CLASSES])
@@ -20,14 +20,14 @@ class NN:
         train_data = tf.data.TFRecordDataset(['data_train' + tfrecord_suffix + '.tfrecord'])
         val_data = tf.data.TFRecordDataset(['data_validate' + tfrecord_suffix + '.tfrecord'])
 
-        train_it = train_data.shuffle(10000).batch(5000).make_initializable_iterator()
+        train_it = train_data.shuffle(10000).batch(train_batch_size).make_initializable_iterator()
         eval_it = val_data.shuffle(10000).batch(5000).make_initializable_iterator()
 
-        self._train_it_next = tf.parse_example(train_it.get_next(), self._feature)
-        self._train_it_initializer = train_it.initializer
+        self.train_it_next = tf.parse_example(train_it.get_next(), self._feature)
+        self.train_it_initializer = train_it.initializer
 
-        self._eval_it_next = tf.parse_example(eval_it.get_next(), self._feature)
-        self._eval_it_initializer = eval_it.initializer
+        self.eval_it_next = tf.parse_example(eval_it.get_next(), self._feature)
+        self.eval_it_initializer = eval_it.initializer
 
         self._nn = self._create_nn()
 
@@ -56,7 +56,7 @@ class NN:
         return ret, [d == r for d, r in zip(desired_el, res_el)]
 
     def _run_train(self, sess: tf.Session):
-        sess.run(self._train_it_initializer)
+        sess.run(self.train_it_initializer)
 
         run = 0
         total_loss = 0.
@@ -66,7 +66,7 @@ class NN:
 
         try:
             while True:
-                (loss, _), correct = self._run_example(sess, (self._loss_function, self._train_op), self._train_it_next)
+                (loss, _), correct = self._run_example(sess, (self._loss_function, self._train_op), self.train_it_next)
 
                 for l, c in zip(loss, correct):
                     total_loss += l
@@ -80,7 +80,7 @@ class NN:
         print("train average loss: " + str(total_loss / run) + " correct predictions: " + str(correct_n / run))
 
     def _run_eval(self, sess: tf.Session):
-        sess.run(self._eval_it_initializer)
+        sess.run(self.eval_it_initializer)
 
         total_loss = 0.
         run = 0
@@ -88,7 +88,7 @@ class NN:
         try:
             while True:
                 run += 1
-                loss, correct = self._run_example(sess, self._loss_function, self._eval_it_next)
+                loss, correct = self._run_example(sess, self._loss_function, self.eval_it_next)
 
                 for l, c in zip(loss, correct):
                     total_loss += l
