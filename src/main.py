@@ -1,4 +1,4 @@
-import perceptron as p
+import src.perceptron as p
 import tensorflow as tf
 import sys
 
