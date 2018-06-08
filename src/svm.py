@@ -1,6 +1,6 @@
 import tensorflow as tf
 import operator
-from tensorflow.contrib.opt import ScipyOptimizerInterface
+
 
 class SVM:
     CLASSES = 50
@@ -11,20 +11,23 @@ class SVM:
             def __init__(self, input_size):
                 self.value = tf.Variable(tf.random_normal(shape=(input_size,)))
 
-        def __init__(self, input, input_size, support_vector_n):
+        def __init__(self, input, input_size, support_vector_n, gamma):
             self.support_vectors = [self.SupportVector(input_size) for _ in range(support_vector_n)]
             self.bias = tf.Variable(tf.random_normal(shape=(1,)))
-            self.neg_gamma = tf.Variable(-1.)
-            self.weight = tf.Variable(tf.random_normal(shape=(1, support_vector_n)))
+
+            self.weights_var = tf.Variable(tf.random_normal(shape=(1, support_vector_n-1)))
+            last_weight = tf.multiply(tf.reduce_sum(self.weights_var, keepdims=True), tf.constant(-1.))
+            self.weights = tf.concat((self.weights_var, last_weight), 1)
+
             self.kernels = tf.stack([
                         tf.exp(tf.multiply(
                             tf.norm(tf.subtract(input, vec.value), axis=1),
-                            self.neg_gamma
+                            tf.constant(-gamma, dtype=tf.float32)
                         ))
                         for vec in self.support_vectors
                     ], axis=1)
             self.output = tf.reshape(
-                tf.subtract(tf.matmul(self.kernels, self.weight, transpose_b=True), self.bias),
+                tf.subtract(tf.matmul(self.kernels, self.weights, transpose_b=True), self.bias),
                 [-1])
 
             pass
@@ -32,31 +35,16 @@ class SVM:
         def trainable_vars(self):
             ret = [v.value for v in self.support_vectors]
             ret.append(self.bias)
-            ret.append(self.neg_gamma)
-            ret.append(self.weight)
+            ret.append(self.weights_var)
             return ret
 
-        def equality(self):
-            return tf.reduce_sum(self.weight)
-
-        def inequality(self):
-            return -self.neg_gamma
-
-        def create_optimizer(self, desired_output):
-            return ScipyOptimizerInterface(
-                tf.squared_difference(self.output, desired_output),
-                self.trainable_vars(),
-                equalities=[self.equality()],
-                inequalities=[self.inequality()],
-                method='SLSQP')
-
-    def __init__(self, conv, support_vector_n):
+    def __init__(self, conv, support_vector_n, gamma):
         self._conv = conv
 
         conv_descr = tf.reshape(conv.descriptor, (-1, conv.descr_size))
 
         self.class_svms = [
-            self._SVMSingleClass(conv_descr, conv.descr_size, support_vector_n)
+            self._SVMSingleClass(conv_descr, conv.descr_size, support_vector_n, gamma)
             for _ in range(self.CLASSES)]
 
         self.trainable_vars = [var for vec in self.class_svms for var in vec.trainable_vars()]
@@ -68,25 +56,19 @@ class SVM:
 
         self.loss = tf.reduce_sum(tf.squared_difference(self.output, self.Y), axis=-1)
 
-        equalities = [v.equality() for v in self.class_svms]
-        inequalities = [v.inequality() for v in self.class_svms]
+        self.optimizer = tf.train.AdamOptimizer()
+        self.train_op = self.optimizer.minimize(self.loss, var_list=self.trainable_vars)
 
-        self.train_ops = [
-            self.class_svms[i].create_optimizer(tf.slice(y1d, [i], [1]))
-            for i in range(len(self.class_svms))]
+    def variables(self):
+        ret = self.trainable_vars.copy()
+        ret.extend(self.optimizer.variables())
+        return ret
 
-    def varaibles(self):
-        return self.trainable_vars
-
-    def _run_example(self, sess: tf.Session, func, example: tf.Tensor, train=False):
+    def _run_example(self, sess: tf.Session, func, example: tf.Tensor):
         parsed = sess.run(example)
 
         input = parsed['image/data'].values
         output = parsed['image/class']
-
-        if train:
-            for train_op in self.train_ops:
-                train_op.minimize(sess, feed_dict={self._conv.X: input, self.Y: output})
 
         ret, res = sess.run((func, self.output), {self._conv.X: input, self.Y: output})
 
@@ -108,7 +90,7 @@ class SVM:
 
         try:
             while True:
-                loss, correct = self._run_example(sess, self.loss, self._conv.train_it_next, True)
+                (loss, _), correct = self._run_example(sess, (self.loss, self.train_op), self._conv.train_it_next)
 
                 for l, c in zip(loss, correct):
                     total_loss += l
