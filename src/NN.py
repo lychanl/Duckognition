@@ -32,7 +32,7 @@ class NN:
 
         self._nn = self._create_nn()
 
-        self._loss_function = cross_entropy(self._nn, self.Y) if cross_entropy is not None \
+        self._loss_function = cross_entropy(self.Y, self._nn) if cross_entropy is not None \
             else tf.reduce_sum(tf.squared_difference(self._nn, self.Y), 1)
 
         optimizer = tf.train.AdamOptimizer()  # (learning_rate=learning_rate, momentum=momentum, use_nesterov=True)
