@@ -69,11 +69,19 @@ class NN:
             while True:
                 (loss, _), correct = self._run_example(sess, (self._loss_function, self._train_op), self.train_it_next)
 
-                for l, c in zip(loss, correct):
-                    total_loss += l
-                    run += 1
-                    if c:
-                        correct_n += 1
+                if loss is collections.Iterable:
+                    for l, c in zip(loss, correct):
+                        total_loss += l
+                        run += 1
+                        if c:
+                            correct_n += 1
+                else:
+                    total_loss += loss
+                    for c in correct:
+                        run += 1
+                        if c:
+                            correct_n += 1
+
 
         except tf.errors.OutOfRangeError:
             pass
